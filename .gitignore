@@ -3,4 +3,5 @@
 terraform.tf/
 *.terraform.lock.hcl
 *terraform.tfstate
-
+securitygroup.tf
+keypair.tf
