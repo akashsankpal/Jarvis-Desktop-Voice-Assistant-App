@@ -2,33 +2,34 @@ pipeline {
     agent any
 
     environment {
-        SERVER_IP = "3.108.219.106"
-        APP_DIR = "/home/ubuntu/jarvisweb"
+        SSH_CRED    = 'node-app-key'
+        SERVER_IP   = '3.108.219.106'
+        REMOTE_USER = 'ubuntu'
+        APP_DIR     = '/home/ubuntu/jarvisweb'
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                git url: 'https://github.com/akashsankpal/Jarvis-Desktop-Voice-Assistant-App', branch: 'main'
             }
         }
 
-        stage('Deploy Files') {
+        stage('Deploy to Server') {
             steps {
-                sshagent(['node-app-key']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP "rm -rf $APP_DIR && mkdir -p $APP_DIR"
-                    scp -o StrictHostKeyChecking=no -r . ubuntu@$SERVER_IP:$APP_DIR
-                    '''
+                sshagent(credentials: ["${SSH_CRED}"]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} 'mkdir -p ${APP_DIR}'
+                        scp -o StrictHostKeyChecking=no -r * ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}
+                    """
                 }
             }
         }
 
         stage('Install Dependencies & Run App') {
-    steps {
-        sshagent(['node-app-key']) {
-            sh '''
+            steps {
+                sshagent(credentials: ["${SSH_CRED}"]) {
+                    sh '''
 ssh -o StrictHostKeyChecking=no ubuntu@3.108.219.106 << EOF
 cd /home/ubuntu/jarvisweb
 sudo apt update
@@ -42,8 +43,18 @@ pip install -r requirements.txt
 pkill -f app.py || true
 nohup python3 app.py > app.log 2>&1 &
 EOF
-            '''
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment Successful"
+        }
+        failure {
+            echo "❌ Deployment Failed"
         }
     }
 }
-
