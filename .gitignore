@@ -14,3 +14,6 @@
 # Terraform sensitive files (if you don't want to push them)
 securitygroup.tf
 keypair.tf
+.terraform/
+*.tfstate
+*.tfstate.*
