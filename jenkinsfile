@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SSH_CRED    = 'node-app-key'
-        SERVER_IP   = '13.235.91.206'
+        SERVER_IP   = '13.203.195.220'
         REMOTE_USER = 'ubuntu'
         APP_DIR     = '/home/ubuntu/pythonapp'
     }
@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/akashsankpal/pythonapppro.git', branch: 'main'
+                git url: 'https://github.com/akashsankpal/Jarvis-Desktop-Voice-Assistant-App', branch: 'main'
             }
         }
 
