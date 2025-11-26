@@ -6,6 +6,7 @@ pipeline {
         SERVER_IP   = '3.108.219.106'
         REMOTE_USER = 'ubuntu'
         APP_DIR     = '/home/ubuntu/pythonapp'
+        REPO_DIR    = 'Jarvis-Desktop-Voice-Assistant-App' // <-- relative repo folder after git clone
     }
 
     stages {
@@ -20,7 +21,7 @@ pipeline {
                 sshagent(credentials: ["${SSH_CRED}"]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} 'mkdir -p ${APP_DIR}'
-                        scp -o StrictHostKeyChecking=no -r Dockerfile README.md app.py requirements.txt test ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}/
+                        scp -o StrictHostKeyChecking=no -r ${REPO_DIR}/* ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}/
                     """
                 }
             }
@@ -48,10 +49,10 @@ pipeline {
 
     post {
         success {
-            echo " Deployment Successful!"
+            echo "Deployment Successful!"
         }
         failure {
-            echo " Deployment Failed!"
+            echo "Deployment Failed!"
         }
     }
 }
