@@ -2,43 +2,45 @@ pipeline {
     agent any
 
     environment {
-        SSH_CRED    = 'node-app-key'
-        SERVER_IP   = '3.108.219.106'
-        REMOTE_USER = 'ubuntu'
-        APP_DIR     = '/home/ubuntu/jarvisweb'
+        SERVER_IP = "3.108.219.106"
+        APP_DIR = "/home/ubuntu/jarvisweb"
     }
 
     stages {
-        stage('Clone Repo') {
+
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/akashsankpal/Jarvis-Desktop-Voice-Assistant-App', branch: 'main'
+                checkout scm
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Files') {
             steps {
-                sshagent(credentials: ["${SSH_CRED}"]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} 'rm -rf ${APP_DIR} && mkdir -p ${APP_DIR}'
-                    scp -o StrictHostKeyChecking=no -r * ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}/
-                    """
+                sshagent(['node-app-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP "rm -rf $APP_DIR && mkdir -p $APP_DIR"
+                    scp -o StrictHostKeyChecking=no -r . ubuntu@$SERVER_IP:$APP_DIR
+                    '''
                 }
             }
         }
 
-        stage('Run Flask App') {
+        stage('Install Dependencies & Run App') {
             steps {
-                sshagent(credentials: ["${SSH_CRED}"]) {
+                sshagent(['node-app-key']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} << EOF
-                    sudo apt update -y
-                    sudo apt install -y python3-venv python3-pip
-                    cd ${APP_DIR}
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
-                    pkill -f app.py || true
-                    nohup python3 app.py > app.log 2>&1 &
+                    ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << 'EOF'
+                        cd $APP_DIR
+                        sudo apt update
+                        sudo apt install -y python3-venv python3-pip
+
+                        python3 -m venv venv
+                        source venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+
+                        pkill -f app.py || true
+                        nohup python3 app.py > app.log 2>&1 &
                     EOF
                     """
                 }
