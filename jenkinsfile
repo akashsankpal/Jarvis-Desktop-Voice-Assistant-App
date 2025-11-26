@@ -6,43 +6,42 @@ pipeline {
         SERVER_IP   = '3.108.219.106'
         REMOTE_USER = 'ubuntu'
         APP_DIR     = '/home/ubuntu/pythonapp'
-        REPO_DIR    = 'Jarvis-Desktop-Voice-Assistant-App' // <-- relative repo folder after git clone
     }
 
     stages {
-        stage('Clone Repository') {
+
+        stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/akashsankpal/Jarvis-Desktop-Voice-Assistant-App', branch: 'main'
+                checkout scm
             }
         }
 
         stage('Deploy to Server') {
-    steps {
-        sshagent(credentials: ["${SSH_CRED}"]) {
-            sh """
-                ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} 'mkdir -p ${APP_DIR}'
-                scp -o StrictHostKeyChecking=no -r * ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}/
-            """
+            steps {
+                sshagent([env.SSH_CRED]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$SERVER_IP "mkdir -p $APP_DIR"
+                        scp -o StrictHostKeyChecking=no -r * $REMOTE_USER@$SERVER_IP:$APP_DIR/
+                    '''
+                }
+            }
         }
-    }
-}
-
 
         stage('Install & Run Application') {
             steps {
-                sshagent(credentials: ["${SSH_CRED}"]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} << 'EOF'
+                sshagent([env.SSH_CRED]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$SERVER_IP << 'EOF'
                         sudo apt update -y
                         sudo apt install -y python3-venv python3-pip
-                        cd ${APP_DIR}
+                        cd /home/ubuntu/pythonapp
                         python3 -m venv venv
-                        . venv/bin/activate
+                        source venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-                        nohup python3 app.py --host=0.0.0.0 > app.log 2>&1 &
+                        nohup python3 app.py > app.log 2>&1 &
                         EOF
-                    """
+                    '''
                 }
             }
         }
@@ -50,10 +49,10 @@ pipeline {
 
     post {
         success {
-            echo "Deployment Successful!"
+            echo " Deployment Successful!"
         }
         failure {
-            echo "Deployment Failed!"
+            echo " Deployment Failed!"
         }
     }
 }
