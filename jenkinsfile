@@ -26,25 +26,24 @@ pipeline {
         }
 
         stage('Install Dependencies & Run App') {
-            steps {
-                sshagent(['node-app-key']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << 'EOF'
-                        cd $APP_DIR
-                        sudo apt update
-                        sudo apt install -y python3-venv python3-pip
+    steps {
+        sshagent(['node-app-key']) {
+            sh '''
+ssh -o StrictHostKeyChecking=no ubuntu@3.108.219.106 << EOF
+cd /home/ubuntu/jarvisweb
+sudo apt update
+sudo apt install -y python3-venv python3-pip
 
-                        python3 -m venv venv
-                        source venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r requirements.txt
+python3 -m venv venv
+. venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
 
-                        pkill -f app.py || true
-                        nohup python3 app.py > app.log 2>&1 &
-                    EOF
-                    """
-                }
-            }
+pkill -f app.py || true
+nohup python3 app.py > app.log 2>&1 &
+EOF
+            '''
         }
     }
 }
+
