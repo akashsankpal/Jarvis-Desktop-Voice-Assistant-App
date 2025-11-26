@@ -5,54 +5,44 @@ pipeline {
         SSH_CRED    = 'node-app-key'
         SERVER_IP   = '3.108.219.106'
         REMOTE_USER = 'ubuntu'
-        APP_DIR     = '/home/ubuntu/pythonapp'
+        APP_DIR     = '/home/ubuntu/jarvisweb'
     }
 
     stages {
-
-        stage('Checkout Code') {
+        stage('Clone Repo') {
             steps {
-                checkout scm
+                git url: 'https://github.com/akashsankpal/Jarvis-Desktop-Voice-Assistant-App', branch: 'main'
             }
         }
 
-        stage('Deploy to Server') {
+        stage('Deploy') {
             steps {
-                sshagent([env.SSH_CRED]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$SERVER_IP "mkdir -p $APP_DIR"
-                        scp -o StrictHostKeyChecking=no -r * $REMOTE_USER@$SERVER_IP:$APP_DIR/
-                    '''
+                sshagent(credentials: ["${SSH_CRED}"]) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} 'rm -rf ${APP_DIR} && mkdir -p ${APP_DIR}'
+                    scp -o StrictHostKeyChecking=no -r * ${REMOTE_USER}@${SERVER_IP}:${APP_DIR}/
+                    """
                 }
             }
         }
 
-        stage('Install & Run Application') {
+        stage('Run Flask App') {
             steps {
-                sshagent([env.SSH_CRED]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$SERVER_IP <<EOF
-sudo apt update -y
-sudo apt install -y python3-venv python3-pip
-cd /home/ubuntu/pythonapp
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-nohup python3 app.py > app.log 2>&1 &
-EOF
-                    '''
+                sshagent(credentials: ["${SSH_CRED}"]) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${SERVER_IP} << EOF
+                    sudo apt update -y
+                    sudo apt install -y python3-venv python3-pip
+                    cd ${APP_DIR}
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                    pkill -f app.py || true
+                    nohup python3 app.py > app.log 2>&1 &
+                    EOF
+                    """
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Deployment Successful!"
-        }
-        failure {
-            echo "❌ Deployment Failed!"
         }
     }
 }
