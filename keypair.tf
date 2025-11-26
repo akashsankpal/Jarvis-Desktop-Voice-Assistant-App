@@ -1,4 +1,15 @@
-resource "aws_key_pair" "jarvis_key" {
-  key_name   = "jarvis-key"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCn0BKR15VP4HcE+S6wKdsd2bFgFbMQTdQs0meXwI2YS7+bPJqKyhJg8PmmWcY4A18GdCqH/D2f+iTMSOZqIf0gUVO7I2veumjzjwqy0pzJhGaA79pYJB9UuNoRu3h6aQ7vKxKdLHuS/QDSSQA3IPgSPz8OqsJ6HYLSjQevFdZC6CVwWeIvsXiO75uXKOFQVnR4HuMX95EHlsJKZfl63T/3AmYGA+s0e9N7noDHvonzJLFMEM97j5UpF/DW3sBjLia29x85PESGr8du5xqKJuBw9WEgWCM+AgTZJ5Chgsc55JuMHySOZKvwLdjAXuMj8ow4nqMm+40eLxdJbVTufywKYiIdOBGs566BClaaFRfZPBrqReP2abzClIF2PEdEIw8uPQ41umlOtR9HdsVBLDK7Td/v074yJyAqeT3mG/9PJSFJ0EMXSIKEQMreAT0L9GZXnOchcl3G1uiKCmics9C4CZxOtidF56XfPp0n1SUV4mwMf75CWkrwsvh60IMNkRU= akash@Lenovo"
+variable "my_ami" {
+    description = "ami id"
+  default = "ami-02b8269d5e85954ef"
 }
+
+variable "my_instance" {
+  description = "ec2 instance"
+  default = "t2.micro"
+}
+
+variable "my_key" {
+  description = "key pair"
+  default = "master1"
+}
+
